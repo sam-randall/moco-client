@@ -5,6 +5,7 @@ import pandas as pd
 
 from pydantic import BaseModel
 from typing import Any, List, Optional
+
 class RulesRequest(BaseModel):
     data: List
     predictions: List
@@ -18,8 +19,7 @@ class Rule(BaseModel):
 class RulesResponse(BaseModel):
     rules: List[Rule]
     rule_values: List[Any]
-    rule_information: List
-
+    rule_summary: List
 
 # TODO: Move to .env
 IS_DEV = True
@@ -39,11 +39,10 @@ class EarlyExitModel:
             'predictions': predictions
         }
 
-        r = requests.post("http://127.0.0.1:8000/get-rules", json = d)
+        r = requests.post(f"http://{URL}/get-rules", json = d)
 
         if r.status_code == 200:
             d = json.loads(r.content)
-
             rules = d['rules']
             rule_values = d['rule_values']
             rule_summary = d.get('rule_summary', None)
