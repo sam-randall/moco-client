@@ -17,6 +17,9 @@ This assumes that the time the rule takes to decide whether a data point is easy
 
 Finally, it's important that we maintain accuracy. These rules when activated do not result in different predictions than the original model.
 
+#### Note that `get_fast_rules` does call an API automatically. 
+*If data privacy is a concern, please do not use this software as is, but rather file an issue or contact me.*
+
 
 Usage:
 ```python
