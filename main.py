@@ -68,9 +68,10 @@ def main():
 
     predictions = np.zeros(40)
     predictions[20:40] = 1
-    m.get_fast_rules(stack, predictions)
-    print(m.membership_rules)
-    print(m.membership_values)
+    summary = m.get_fast_rules(stack, predictions)
+    # print(m.membership_rules)
+    # print(m.membership_values)
+    print(summary)
 
 
 if __name__ == "__main__":
