@@ -9,6 +9,7 @@ from typing import Any, List, Optional
 class RulesRequest(BaseModel):
     data: List
     predictions: List
+    epsilon: float
 
 class Rule(BaseModel):
     coef: List
@@ -36,7 +37,8 @@ class EarlyExitModel:
         predictions = predictions.tolist()
         d = {
             'data': dataset,
-            'predictions': predictions
+            'predictions': predictions,
+            'epsilon': 1e-14
         }
 
         r = requests.post(f"http://{URL}/get-rules", json = d)
