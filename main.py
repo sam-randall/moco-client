@@ -23,7 +23,7 @@ class RulesResponse(BaseModel):
 
 # TODO: Move to .env
 IS_DEV = True
-URL = f'{"127.0.0.1" if IS_DEV else "production-url"}'
+URL = f'{"127.0.0.1:8000" if IS_DEV else "production-url"}'
 
 class EarlyExitModel:
     def __init__(self, model):
@@ -62,7 +62,7 @@ class EarlyExitModel:
 def main():
     m = EarlyExitModel(None)
     data1 = np.random.uniform(low = 0, high = 0.1, size = (20, 2))
-    data2 = np.random.uniform(low = 1, high = 1.1, size = (20, 2))
+    data2 = np.random.uniform(low = 3, high = 3.5, size = (20, 2))
     stack = np.vstack([data1, data2])
 
     predictions = np.zeros(40)
