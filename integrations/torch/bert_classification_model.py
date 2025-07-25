@@ -4,6 +4,7 @@ from typing import Callable, Literal, Optional
 import numpy as np
 from transformers import BertForSequenceClassification
 import torch
+from src.early_exit_model import EarlyExitModel
 
 
 def get_extended_attention_mask(attention_mask, device):
@@ -13,7 +14,7 @@ def get_extended_attention_mask(attention_mask, device):
     return extended
 
 
-class EarlyExitTextClassificationModel(BertForSequenceClassification):
+class EarlyExitTextClassificationModel(BertForSequenceClassification, EarlyExitModel):
     def __init__(self, model: BertForSequenceClassification):
         super().__init__(model.config)
         self.embeddings = model.bert.embeddings
@@ -93,3 +94,6 @@ class EarlyExitTextClassificationModel(BertForSequenceClassification):
             }
         else:
             raise NotImplementedError()
+        
+    def get_and_apply_rule(self, dataset, predictions=None):
+        print("text classification")

@@ -17,10 +17,10 @@ def main():
 
 
     eetcm = EarlyExitTextClassificationModel(tiny_bert.model)
-
-    frame = MLFrame.load_frame('../moco/imdb/out.frame')
-    embedding = frame['bert.encoder.layer.0.attention']
-    N = embedding.shape[0]
+    eetcm.get_and_apply_rule(None, None)
+    # frame = MLFrame.load_frame('../moco/imdb/out.frame')
+    # embedding = frame['bert.encoder.layer.0.attention']
+    # N = embedding.shape[0]
 
 
 if __name__ == "__main__":
