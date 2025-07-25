@@ -5,6 +5,7 @@ import numpy as np
 from transformers import BertForSequenceClassification
 import torch
 
+
 def get_extended_attention_mask(attention_mask, device):
     # (batch_size, 1, 1, seq_len)
     extended = attention_mask[:, None, None, :].to(dtype=torch.float, device=device)
