@@ -6,7 +6,7 @@ import numpy as np
 import os
 import pandas as pd
 import copy
-from feature import Feature
+from src.feature import Feature
 
 class MLFrame:
     pass

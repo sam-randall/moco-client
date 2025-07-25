@@ -1,4 +1,4 @@
-from coloring import compute_categorical_coloring, compute_numerical_coloring
+from src.coloring import compute_categorical_coloring, compute_numerical_coloring
 from typing import List
 import numpy as np
 
