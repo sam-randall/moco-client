@@ -1,0 +1,19 @@
+
+
+[project]
+name = "moco-client"
+version = "0.1.0"
+description = "A project with examples and integrations"
+authors = [
+    { name="Sam Randall", email="samrandall@alumni.stanford.edu" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = []
+
+[tool.setuptools]
+packages = ["integrations"]
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
