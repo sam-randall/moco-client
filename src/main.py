@@ -26,6 +26,8 @@ class RulesResponse(BaseModel):
 IS_DEV = True
 URL = f'{"127.0.0.1:8000" if IS_DEV else "production-url"}'
 
+
+
 class EarlyExitModel:
     def __init__(self, model):
         self.model = model

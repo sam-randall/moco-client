@@ -5,7 +5,7 @@ import numpy as np
 from transformers import BertForSequenceClassification
 import torch
 from src.early_exit_model import EarlyExitModel
-
+from src.get_fast_models import get_fast_rules
 
 def get_extended_attention_mask(attention_mask, device):
     # (batch_size, 1, 1, seq_len)
@@ -96,4 +96,11 @@ class EarlyExitTextClassificationModel(BertForSequenceClassification, EarlyExitM
             raise NotImplementedError()
         
     def get_and_apply_rule(self, dataset, predictions=None):
-        print("text classification")
+        if predictions is None:
+            
+            raise NotImplementedError("Need to implement model evaluation in this case. ")
+        rule_response = get_fast_rules(dataset, predictions)
+        
+        if rule_response is not None:
+            print(rule_response)
+
