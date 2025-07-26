@@ -104,3 +104,6 @@ class EarlyExitTextClassificationModel(BertForSequenceClassification, EarlyExitM
         if rule_response is not None:
             print(rule_response)
 
+        # TODO: Add rule here!
+        # Create end-to-end example. 
+
