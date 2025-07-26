@@ -1,9 +1,7 @@
 
 import numpy as np
 import requests
-import json
 import io
-import os
 
 from pydantic import BaseModel
 from typing import Any, List, Optional

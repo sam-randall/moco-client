@@ -17,9 +17,11 @@ def main():
 
 
     eetcm = EarlyExitTextClassificationModel(tiny_bert.model)
-    eetcm.get_and_apply_rule(None, None)
-    # frame = MLFrame.load_frame('../moco/imdb/out.frame')
-    # embedding = frame['bert.encoder.layer.0.attention']
+    
+    frame = MLFrame.load_frame('../moco/imdb/out.frame')
+    embedding = frame['bert.encoder.layer.0.attention']
+    predictions = frame['predictions']
+    eetcm.get_and_apply_rule(embedding, predictions)
     # N = embedding.shape[0]
 
 
