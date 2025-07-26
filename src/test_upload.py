@@ -5,4 +5,6 @@ import numpy as np
 if __name__ == "__main__":
     dataset_test = np.zeros((10, 2))
     predictions = np.ones(10)
-    get_fast_rules(dataset_test, predictions)
+    predictions[:5] = 0
+    content = get_fast_rules(dataset_test, predictions)
+    print("Content", content)
