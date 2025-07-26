@@ -28,20 +28,22 @@ class RulesResponse(BaseModel):
 IS_DEV = True
 URL = f'{"127.0.0.1:8000" if IS_DEV else "production-url"}'
 
+def array_to_bytes(array: np.ndarray):
+    dataset_io = io.BytesIO()
+    np.save(dataset_io, array)
+    dataset_io.seek(0)
+    return dataset_io
+
 
 def get_fast_rules(dataset: np.ndarray, predictions: np.ndarray):
 
-    dataset_io = io.BytesIO()
-    np.save(dataset_io, dataset)
-    dataset_io.seek(0)
+    dataset_io = array_to_bytes(dataset)
 
     files = {'file': ('dataset.npy', dataset_io, 'application/octet-stream')}
 
     response = requests.post(url=f'http://{URL}/upload', files=files)
 
-    predictions_io = io.BytesIO()
-    np.save(predictions_io, predictions)
-    predictions_io.seek(0)
+    predictions_io = array_to_bytes(predictions)
     
     files = {'file': ('predictions.npy', predictions_io, 'application/octet-stream')}
     response = requests.post(url = f'http://{URL}/upload', files=files)
