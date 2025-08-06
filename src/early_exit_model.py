@@ -79,7 +79,7 @@ class EarlyExitModel:
                 out = pd.DataFrame(rule_summary)
                 return out
         else:
-            return None
+            r.raise_for_status()
 
     def predict(self, x: np.ndarray):
 
