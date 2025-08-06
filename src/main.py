@@ -8,24 +8,27 @@ from early_exit_model import EarlyExitModel
 
 def main():
     X, y = load_breast_cancer(return_X_y=True)
-    mlp = MLPClassifier(hidden_layer_sizes=16)
+    mlp = MLPClassifier(hidden_layer_sizes=(256, 32))
     mlp.fit(X, y)
 
     m = EarlyExitModel(mlp)
     predictions = mlp.predict(X)
-    np.save('iris.npy', X)
-    np.save('iris_predictions.npy', predictions)
-    print(predictions.shape)
-    summary = m.get_fast_rules('iris.npy', 'iris_predictions.npy')
+
+    summary = m.compute_short_circuit_rules(X, predictions, 1e-7)
     print(summary)
 
     for i in range(5):
         _ = m.predict(X)
+
     start = time.time()
     for i in range(5):
         new_predictions = m.predict(X)
     end = time.time()
+
     print("Experimental", end - start)
+
+    for i in range(5):
+        out = mlp.predict(X)
 
     start = time.time()
     for i in range(5):

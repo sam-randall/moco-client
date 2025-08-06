@@ -5,7 +5,8 @@ import json
 import requests
 from urllib.parse import urlparse
 import pandas as pd
-from schema import Rule
+from src.schema import Rule
+import os
 from sklearn.neural_network import MLPClassifier
 
 # TODO: Move to .env
@@ -61,6 +62,12 @@ class EarlyExitModel:
         self.membership_rules = []
         self.membership_values = []
         self.active_rules = []
+
+    def compute_short_circuit_rules(self, dataset: np.ndarray, predictions: np.ndarray, epsilon: float):
+        os.makedirs('tmp', exist_ok=True)
+        np.save('tmp/dataset.npy', dataset)
+        np.save('tmp/predictions.npy', predictions)
+        return self.get_fast_rules('tmp/dataset.npy', 'tmp/predictions.npy', epsilon)
 
     def get_fast_rules(self, dataset_path: str, prediction_path: str, epsilon: float = 1e-10):
         r = get_rule(dataset_path, prediction_path, epsilon)
