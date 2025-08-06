@@ -6,6 +6,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.metrics import precision_recall_curve
 import onnxruntime as rt
 import numpy as np
+from src.early_exit_model import EarlyExitModel
 
 from onnxmltools.convert.common.data_types import FloatTensorType
 
@@ -26,7 +27,7 @@ def main():
 
     print("Dataset Size", "X =", train_x.shape, "y = ", train_y.shape)
 
-    n_estimators = 100
+    n_estimators = 256
     bst = xgb.XGBClassifier(n_estimators = n_estimators)
     bst.fit(train_x, train_y)
 
@@ -66,6 +67,19 @@ def main():
     _ = bst.predict(X)
     end = time.time()
     print("Baseline Time", end - start)
+
+    m = EarlyExitModel(bst)
+    predictions = bst.predict(train_x)
+
+    summary = m.compute_short_circuit_rules(train_x, predictions, 1e-7)
+
+    # Disactivate the rule associated with the fraud class.
+    print(m.membership_values)
+    m.active_rules[1] = False
+    start = time.time()
+    m.predict(X)
+    end = time.time()
+    print("Experimental", end - start)
 
 
 if __name__ == "__main__":
