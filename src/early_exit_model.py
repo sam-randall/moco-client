@@ -84,23 +84,19 @@ class EarlyExitModel:
     def predict(self, x: np.ndarray):
 
         out = np.zeros(x.shape[0])
-        needs_eval = np.ones(x.shape[0], dtype = np.bool_)
+        needs_eval = np.arange(x.shape[0])
         for i in range(len(self.membership_rules)):
             if self.active_rules[i]:
                 rule = self.membership_rules[i]
                 W = np.array(rule.coef)
                 b = np.array(rule.intercept)
                 t = np.array(rule.threshold)
-                write_mask = needs_eval.copy()
                 p = (sigmoid(x[needs_eval].dot(W.T) + b) >= t)
-
                 p = p[:, 0]
 
-                write_mask &= p
-                out[write_mask] = self.membership_values[i]
+                out[needs_eval[p]] = self.membership_values[i]
+                needs_eval = needs_eval[~p]
 
-                needs_eval[write_mask] = 0
-                break
 
         if needs_eval.sum() > 0:
             if isinstance(self.model, MLPClassifier):
