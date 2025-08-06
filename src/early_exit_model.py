@@ -6,6 +6,7 @@ import requests
 from urllib.parse import urlparse
 import pandas as pd
 from schema import Rule
+from sklearn.neural_network import MLPClassifier
 
 # TODO: Move to .env
 IS_DEV = True
@@ -13,7 +14,6 @@ URL = f'{"127.0.0.1:8000" if IS_DEV else "production-url"}'
 
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
-
 
 def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
 
@@ -103,6 +103,9 @@ class EarlyExitModel:
                 break
 
         if needs_eval.sum() > 0:
-            out[needs_eval] = self.model.predict(x[needs_eval])
+            if isinstance(self.model, MLPClassifier):
+                out[needs_eval] = self.model.predict(x[needs_eval])
+            else:
+                raise NotImplementedError(f"Model instance {type(self.model)} not implemented.")
 
         return out
