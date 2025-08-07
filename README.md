@@ -1,6 +1,8 @@
 
 ## Welcome to moco.
 
+*Note: this repository is under development.*
+
 moco is purpose-built for performance-minded engineers.
 
 The optimization implemented in this library is attach simple rules to the model.
@@ -17,27 +19,9 @@ This assumes that the time the rule takes to decide whether a data point is easy
 
 Finally, it's important that we maintain accuracy. These rules when activated do not result in different predictions than the original model.
 
-#### Note that `get_fast_rules` does call an API automatically. 
+#### Note that `get_fast_rules` does call an API automatically. That API is not currently deployed rendering this software unusable.
 *If data privacy is a concern, please do not use this software as is, but rather file an issue or contact me.*
 
 
-Usage:
-```python
-
-model = MLPClassifier() | xgb.XGBoost() | BERTForSequenceClassification()
-eem = EarlyExitModel(model)
-data1 = np.random.uniform(low = 0, high = 0.1, size = (20, 2))
-data2 = np.random.uniform(low = 3, high = 3.5, size = (20, 2))
-stack = np.vstack([data1, data2])
-
-predictions = np.zeros(40)
-predictions[20:40] = 1
-summary = eem.get_fast_rules(stack, predictions)
-
-start = time.time()
-eem.predict(test_data)
-end = time.time()
-
-
-```
-
+See the examples folder for usage.
+The project page: https://compressmodels.github.io
