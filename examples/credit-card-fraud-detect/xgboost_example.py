@@ -74,7 +74,6 @@ def main():
     summary = m.compute_short_circuit_rules(train_x, predictions, 1e-7)
 
     # Disactivate the rule associated with the fraud class.
-    print(m.membership_values)
     m.active_rules[1] = False
     start = time.time()
     m.predict(X)

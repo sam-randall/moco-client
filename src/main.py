@@ -14,7 +14,7 @@ def main():
     m = EarlyExitModel(mlp)
     predictions = mlp.predict(X)
 
-    summary = m.compute_short_circuit_rules(X, predictions, 1e-7)
+    summary = m.run_fast_rule_job(X, predictions, 1e-7)
     print(summary)
 
     for i in range(5):

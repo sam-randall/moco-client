@@ -6,8 +6,8 @@ import requests
 from urllib.parse import urlparse
 import pandas as pd
 from src.schema import Rule
+from torch import nn
 import os
-from sklearn.neural_network import MLPClassifier
 
 # TODO: Move to .env
 IS_DEV = True
@@ -19,6 +19,7 @@ def sigmoid(x):
 def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
 
     r = requests.post(f"http://{URL}/get-signed-url")
+    print("Got signed URLs")
     data = r.json()
 
     dataset_url = data['dataset_url']
@@ -27,8 +28,12 @@ def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
     headers = {
         'Content-Type': 'application/x-npy'
     }
+    print("Putting dataset into s3.")
+
     with open(dataset_path, 'rb') as f:
-        response = requests.put(dataset_url, data=f, headers=headers)
+        response = requests.put(dataset_url, data=f, headers=headers, stream = True)
+
+    print("wrote dataset to s3.")
 
     if response.status_code == 200:
         pass
@@ -36,8 +41,9 @@ def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
         response.raise_for_status()
 
     with open(prediction_path, 'rb') as f:
-        response = requests.put(prediction_url, data=f, headers=headers)
+        response = requests.put(prediction_url, data=f, headers=headers, stream = True)
 
+    print("wrote predictions to s3.")
     dataset_remote_path = urlparse(dataset_url).path
     prediction_remote_path = urlparse(prediction_url).path
 
@@ -52,7 +58,7 @@ def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
     r = requests.post(f"http://{URL}/get-s3-files", params={'dataset_s3_key': dataset_remote_path,
                                                                     'predictions_s3_key': prediction_remote_path,
                                                                     'epsilon': epsilon})
-
+    print(r.content)
     return r
 
 
@@ -64,29 +70,33 @@ class EarlyExitModel:
         self.active_rules = []
 
     def compute_short_circuit_rules(self, dataset: np.ndarray, predictions: np.ndarray, epsilon: float):
+        assert isinstance(dataset, np.ndarray)
+        assert isinstance(predictions, np.ndarray)
         os.makedirs('tmp', exist_ok=True)
+        print("Saving...", dataset.shape, predictions.shape)
         np.save('tmp/dataset.npy', dataset)
         np.save('tmp/predictions.npy', predictions)
-        return self.get_fast_rules('tmp/dataset.npy', 'tmp/predictions.npy', epsilon)
+        return self.run_fast_rule_job('tmp/dataset.npy', 'tmp/predictions.npy', epsilon)
 
-    def get_fast_rules(self, dataset_path: str, prediction_path: str, epsilon: float = 1e-10):
-        r = get_rule(dataset_path, prediction_path, epsilon)
 
-        if r.status_code == 200:
-            d = json.loads(r.content)
-            rules = d['rules']
-            rule_values = d['rule_values']
-            rule_summary = d.get('rule_summary', None)
+    def get_processed_rules(self, rules_path: str):
+        d = json.loads(r.content)
+        rules = d['rules']
+        rule_values = d['rule_values']
+        rule_summary = d.get('rule_summary', None)
 
-            out = [Rule.model_validate(r) for r in rules]
-            self.membership_rules = out
-            self.membership_values = rule_values
-            self.active_rules = [True] * len(out)
-            if rule_summary is not None:
+        out = [Rule.model_validate(r) for r in rules]
+        self.membership_rules = out
+        self.membership_values = rule_values
+        self.active_rules = [True] * len(out)
+        if rule_summary is not None:
                 out = pd.DataFrame(rule_summary)
                 return out
-        else:
-            r.raise_for_status()
+    
+    def run_fast_rule_job(self, dataset_path: str, prediction_path: str, epsilon: float = 1e-10):
+        r = get_rule(dataset_path, prediction_path, epsilon)
+        r.raise_for_status()
+        return r
 
     def predict(self, x: np.ndarray):
 
@@ -106,9 +116,13 @@ class EarlyExitModel:
 
 
         if needs_eval.sum() > 0:
-            if isinstance(self.model, MLPClassifier):
-                out[needs_eval] = self.model.predict(x[needs_eval])
+
+            if isinstance(self.model, nn.Module):
+                out[needs_eval] = self.model(x[needs_eval])
             else:
-                raise NotImplementedError(f"Model instance {type(self.model)} not implemented.")
+                try:
+                    out[needs_eval] = self.model.predict(x[needs_eval])
+                except Exception as e:
+                    raise NotImplementedError(f"Model instance {type(self.model)} does not have predict method implemented.")
 
         return out
