@@ -14,8 +14,8 @@ def main():
 
     m = EarlyExitModel(mlp)
     predictions = mlp.predict(X)
-
-    summary = m.compute_short_circuit_rules(X, predictions, 1e-7)
+    user_email = "..."
+    summary = m.compute_short_circuit_rules(X, predictions, 1e-7, user_email)
     print(summary)
 
     for i in range(5):

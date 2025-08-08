@@ -8,6 +8,7 @@ import pandas as pd
 from src.schema import Rule
 from torch import nn
 import os
+from typing import Optional
 
 # TODO: Move to .env
 IS_DEV = True
@@ -16,7 +17,7 @@ URL = f'{"127.0.0.1:8000" if IS_DEV else "production-url"}'
 def sigmoid(x):
     return 1.0 / (1.0 + np.exp(-x))
 
-def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
+def get_rule(dataset_path: str, prediction_path: str, epsilon: float, email_address: Optional[str] = None):
 
     r = requests.post(f"http://{URL}/get-signed-url")
     print("Got signed URLs")
@@ -57,7 +58,7 @@ def get_rule(dataset_path: str, prediction_path: str, epsilon: float):
 
     r = requests.post(f"http://{URL}/get-s3-files", params={'dataset_s3_key': dataset_remote_path,
                                                                     'predictions_s3_key': prediction_remote_path,
-                                                                    'epsilon': epsilon})
+                                                                    'epsilon': epsilon, 'email_address': email_address})
     print(r.content)
     return r
 
@@ -69,14 +70,14 @@ class EarlyExitModel:
         self.membership_values = []
         self.active_rules = []
 
-    def compute_short_circuit_rules(self, dataset: np.ndarray, predictions: np.ndarray, epsilon: float):
+    def compute_short_circuit_rules(self, dataset: np.ndarray, predictions: np.ndarray, epsilon: float, email_address: Optional[str] = None):
         assert isinstance(dataset, np.ndarray)
         assert isinstance(predictions, np.ndarray)
         os.makedirs('tmp', exist_ok=True)
         print("Saving...", dataset.shape, predictions.shape)
         np.save('tmp/dataset.npy', dataset)
         np.save('tmp/predictions.npy', predictions)
-        return self.run_fast_rule_job('tmp/dataset.npy', 'tmp/predictions.npy', epsilon)
+        return self.run_fast_rule_job('tmp/dataset.npy', 'tmp/predictions.npy', epsilon, email_address)
 
 
     def get_processed_rules(self, rules_path: str):
@@ -93,8 +94,8 @@ class EarlyExitModel:
                 out = pd.DataFrame(rule_summary)
                 return out
     
-    def run_fast_rule_job(self, dataset_path: str, prediction_path: str, epsilon: float = 1e-10):
-        r = get_rule(dataset_path, prediction_path, epsilon)
+    def run_fast_rule_job(self, dataset_path: str, prediction_path: str, epsilon: float, email_address: str):
+        r = get_rule(dataset_path, prediction_path, epsilon, email_address)
         r.raise_for_status()
         return r
 
