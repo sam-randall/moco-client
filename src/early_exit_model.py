@@ -1,5 +1,3 @@
-
-
 import numpy as np
 import json
 import requests
@@ -8,7 +6,7 @@ import pandas as pd
 from src.schema import Rule
 from torch import nn
 import os
-from typing import Optional
+from typing import Any, Dict, Optional
 
 # TODO: Move to .env
 IS_DEV = True
@@ -80,8 +78,8 @@ class EarlyExitModel:
         return self.run_fast_rule_job('tmp/dataset.npy', 'tmp/predictions.npy', epsilon, email_address)
 
 
-    def get_processed_rules(self, rules_path: str):
-        d = json.loads(r.content)
+    def apply_rules_from_json_string(self, response_as_dict: Dict[str, Any]):
+        d = response_as_dict
         rules = d['rules']
         rule_values = d['rule_values']
         rule_summary = d.get('rule_summary', None)

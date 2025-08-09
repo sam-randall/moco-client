@@ -18,7 +18,9 @@ def main():
     if os.path.exists("breast_cancer_rules.json"):
         with open('breast_cancer_rules.json') as f:
             d = json.load(f)
-            print(d)
+            d = json.loads(d)
+            print(type(d))
+            m.apply_rules_from_json_string(d)
     else:  
         user_email = "..."
         summary = m.compute_short_circuit_rules(X, predictions, 1e-7, user_email)
