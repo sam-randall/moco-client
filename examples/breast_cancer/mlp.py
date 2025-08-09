@@ -10,7 +10,7 @@ from src.early_exit_model import EarlyExitModel
 
 def main():
     X, y = load_breast_cancer(return_X_y=True)
-    mlp = MLPClassifier(hidden_layer_sizes=(256, 32))
+    mlp = MLPClassifier(hidden_layer_sizes=(256, 32), random_state = 24)
     mlp.fit(X, y)
 
     m = EarlyExitModel(mlp)
@@ -22,7 +22,7 @@ def main():
             print(type(d))
             m.apply_rules_from_json_string(d)
     else:  
-        user_email = "..."
+        user_email = "sam.randall5@gmail.com"
         summary = m.compute_short_circuit_rules(X, predictions, 1e-7, user_email)
         print(summary)
         return
