@@ -1,6 +1,7 @@
 
 
-
+import os
+import json
 from sklearn.datasets import load_breast_cancer
 from sklearn.neural_network import MLPClassifier
 import time
@@ -14,9 +15,15 @@ def main():
 
     m = EarlyExitModel(mlp)
     predictions = mlp.predict(X)
-    user_email = "..."
-    summary = m.compute_short_circuit_rules(X, predictions, 1e-7, user_email)
-    print(summary)
+    if os.path.exists("breast_cancer_rules.json"):
+        with open('breast_cancer_rules.json') as f:
+            d = json.load(f)
+            print(d)
+    else:  
+        user_email = "..."
+        summary = m.compute_short_circuit_rules(X, predictions, 1e-7, user_email)
+        print(summary)
+        return
 
     for i in range(5):
         _ = m.predict(X)
