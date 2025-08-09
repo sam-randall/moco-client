@@ -1,4 +1,4 @@
-
+import os
 
 import pytorch_lightning as pl
 import torch
@@ -10,7 +10,7 @@ from torch.utils.data import DataLoader
 from src.early_exit_model import EarlyExitModel
 from tqdm import tqdm 
 from typing import Tuple
-
+import time
 class LitMNIST(pl.LightningModule):
     def __init__(self, lr=1e-3):
         super().__init__()
@@ -119,9 +119,12 @@ def main():
     transform = transforms.ToTensor()
     train = MNIST(root=".", train=True, download=True, transform=transform)
     test = MNIST(root = ".", train = False, download = True, transform=transform)
-
+  
     # Train Model
-    model = train_model(train, fast_dev=False)
+    if os.path.exists("mnist_model_train.ckpt"):
+        model = LitMNIST.load_from_checkpoint("mnist_model_train.ckpt")
+    else:
+        model = train_model(train, fast_dev=False)
     train_data = train.data[:, torch.newaxis, :, :]
 
     # Make predictions on train dataset.
@@ -155,18 +158,32 @@ def main():
     print("Computing short circuit rules.")
     N = embedding.shape[0]
     embedding = embedding.reshape((N, -1))
-    result = eem.compute_short_circuit_rules(embedding, predictions, 1e-7)
+    if os.path.exists('mnist_rules.json'):
+        import json
+        with open('mnist_rules.json') as f:
+            d = json.load(f)
+            d = json.loads(d)
+        result = eem.apply_rules_from_json_string(d)
+        print(result)
 
-    print(result)
+        start = time.time()
+        for i in range(0, len(train), 1000):
+            with torch.no_grad():
+                eem.predict(train_data[i: i + 1000])
+        end = time.time()
+        print(end - start)
 
+        start =	time.time()
+        for i in range(0, len(train), 1000):
+            with torch.no_grad():
+                sequential_model(train_data[i: i + 1000])
+        end = time.time()
+        print(end - start)
+    else:
+        email_address = "sam.randall5@gmail.com"
+        result = eem.compute_short_circuit_rules(embedding, predictions, 1e-7, email_address)
 
-
-
-
+        print(result)
 if __name__ == "__main__":
     main()
 
-
-
-
-    
