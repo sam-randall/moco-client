@@ -1,5 +1,6 @@
 import pandas as pd
 import xgboost as xgb
+import json
 import time
 from onnxmltools.convert import convert_xgboost
 from sklearn.model_selection import train_test_split
@@ -7,7 +8,7 @@ from sklearn.metrics import precision_recall_curve
 import onnxruntime as rt
 import numpy as np
 from src.early_exit_model import EarlyExitModel
-
+import os
 from onnxmltools.convert.common.data_types import FloatTensorType
 
 def load_dataset(csv_path: str):
@@ -28,7 +29,7 @@ def main():
     print("Dataset Size", "X =", train_x.shape, "y = ", train_y.shape)
 
     n_estimators = 256
-    bst = xgb.XGBClassifier(n_estimators = n_estimators)
+    bst = xgb.XGBClassifier(n_estimators = n_estimators, random_state = 3)
     bst.fit(train_x, train_y)
 
     predictions = bst.predict(train_x)
@@ -70,16 +71,23 @@ def main():
 
     m = EarlyExitModel(bst)
     predictions = bst.predict(train_x)
-
-    summary = m.compute_short_circuit_rules(train_x, predictions, 1e-7)
-
+    email_address = "sam.randall5@gmail.com"
+    
+    path_to_rules_file = 'examples/credit-card-fraud-detect/rule.json'
+    if os.path.exists(path_to_rules_file):
+        with open(path_to_rules_file) as f:
+            d = json.load(f)
+            d = json.loads(d)
+            m.apply_rules_from_json_string(d)
+            m.default_path = m.model.predict_proba
+    else:
+        summary = m.compute_short_circuit_rules(train_x, predictions, 1e-7, email_address)
     # Disactivate the rule associated with the fraud class.
     m.active_rules[1] = False
     start = time.time()
     m.predict(X)
     end = time.time()
     print("Experimental", end - start)
-
 
 if __name__ == "__main__":
     main()

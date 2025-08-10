@@ -124,6 +124,8 @@ class EarlyExitModel:
                 needs_eval = needs_eval[~p]
 
         if needs_eval.sum() > 0:
-            out[needs_eval] = self.default_path(x[needs_eval]).argmax(axis = 1)
-
+            try:
+                out[needs_eval] = self.default_path(x[needs_eval]).argmax(axis = 1)
+            except Exception as e:
+                out[needs_eval] = self.default_path(x[needs_eval]).argmax(axis = 1)
         return out
