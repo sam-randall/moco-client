@@ -1,4 +1,5 @@
 import numpy as np
+
 import json
 import requests
 from urllib.parse import urlparse
@@ -6,7 +7,8 @@ import pandas as pd
 from src.schema import Rule
 from torch import nn
 import os
-from typing import Any, Dict, Optional
+from typing import Any, Dict, Optional, Union
+import torch
 
 # TODO: Move to .env
 IS_DEV = True
@@ -67,6 +69,8 @@ class EarlyExitModel:
         self.membership_rules = []
         self.membership_values = []
         self.active_rules = []
+        self.decision_function = lambda x: x
+        self.default_path = self.model
 
     def compute_short_circuit_rules(self, dataset: np.ndarray, predictions: np.ndarray, epsilon: float, email_address: Optional[str] = None):
         assert isinstance(dataset, np.ndarray)
@@ -97,31 +101,29 @@ class EarlyExitModel:
         r.raise_for_status()
         return r
 
-    def predict(self, x: np.ndarray):
-
+    def predict(self, x: Union[np.ndarray, torch.Tensor]):
+        data_library_type = 'np' if isinstance(x, np.ndarray) else 'torch'
+        with torch.no_grad():
+            x = self.decision_function(x)
         out = np.zeros(x.shape[0])
         needs_eval = np.arange(x.shape[0])
         for i in range(len(self.membership_rules)):
             if self.active_rules[i]:
                 rule = self.membership_rules[i]
-                W = np.array(rule.coef)
-                b = np.array(rule.intercept)
-                t = np.array(rule.threshold)
-                p = (sigmoid(x[needs_eval].dot(W.T) + b) >= t)
+                W = np.array(rule.coef) if data_library_type == 'np' else torch.Tensor(rule.coef)
+                b = np.array(rule.intercept) if data_library_type == 'np' else torch.Tensor(rule.intercept)
+                t = rule.threshold # np.array(rule.threshold) if data_library_type == 'np' else torch.Tensor(rule.threshold)
+                N = x.shape[0]
+                x_ = x.reshape((N, -1))
+                xw = x_[needs_eval].dot(W.T) if data_library_type == 'np' else torch.matmul(x_[needs_eval], W.T)
+                lin = xw + b
+                p = (sigmoid(lin) >= t)
                 p = p[:, 0]
 
                 out[needs_eval[p]] = self.membership_values[i]
                 needs_eval = needs_eval[~p]
 
-
         if needs_eval.sum() > 0:
-
-            if isinstance(self.model, nn.Module):
-                out[needs_eval] = self.model(x[needs_eval])
-            else:
-                try:
-                    out[needs_eval] = self.model.predict(x[needs_eval])
-                except Exception as e:
-                    raise NotImplementedError(f"Model instance {type(self.model)} does not have predict method implemented.")
+            out[needs_eval] = self.default_path(x[needs_eval]).argmax(axis = 1)
 
         return out
