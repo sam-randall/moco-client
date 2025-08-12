@@ -101,6 +101,33 @@ class EarlyExitModel:
         r.raise_for_status()
         return r
 
+    def resnet_predict(self, **x):
+        with torch.no_grad():
+            x = self.decision_function(**x)
+        N = x.shape[0]
+        out = torch.zeros(x.shape[0])
+        needs_eval = torch.arange(x.shape[0])
+        for i in range(len(self.membership_rules)):
+            if self.active_rules[i]:
+                
+                rule = self.membership_rules[i]
+                W = torch.Tensor(rule.coef)
+                b = torch.Tensor(rule.intercept)
+                t = rule.threshold
+                x_ = x.reshape((N, -1))
+                xw = torch.matmul(x_[needs_eval], W.T)
+                lin = xw + b
+                p = (sigmoid(lin) >= t)
+                p = p[:, 0]
+                p = p.bool()
+                if p.sum(): 
+                    out[needs_eval[p]] = self.membership_values[i]
+                    needs_eval = needs_eval[~p]
+                else:
+                    pass
+        if (len(needs_eval)):
+            out[needs_eval] = self.default_path(x[needs_eval]).argmax(axis = 1).float()
+        return out
     def predict(self, x: Union[np.ndarray, torch.Tensor]):
         data_library_type = 'np' if isinstance(x, np.ndarray) else 'torch'
         with torch.no_grad():
